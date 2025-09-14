@@ -9,7 +9,7 @@
     <visual>
       <origin xyz="0 0 0" rpy="0 0 0" />
       <geometry>
-        <mesh filename="package://agilex_piper_urdf/urdf/meshes/gripper_base.STL" />
+        <mesh filename="package://agilex_piper_urdf/meshes/gripper_base.STL" />
       </geometry>
       <material name="">
         <color rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
@@ -18,7 +18,7 @@
     <collision>
       <origin xyz="0 0 0" rpy="0 0 0" />
       <geometry>
-        <mesh filename="package://agilex_piper_urdf/urdf/meshes/gripper_base.STL" />
+        <mesh filename="package://agilex_piper_urdf/meshes/gripper_base.STL" />
       </geometry>
     </collision>
   </link>
@@ -32,7 +32,7 @@
     <visual>
       <origin xyz="0 0 0" rpy="0 0 0" />
       <geometry>
-        <mesh filename="package://agilex_piper_urdf/urdf/meshes/link7.STL" />
+        <mesh filename="package://agilex_piper_urdf/meshes/link7.STL" />
       </geometry>
       <material name="">
         <color rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
@@ -41,7 +41,7 @@
     <collision>
       <origin xyz="0 0 0" rpy="0 0 0" />
       <geometry>
-        <mesh filename="package://agilex_piper_urdf/urdf/meshes/link7.STL" />
+        <mesh filename="package://agilex_piper_urdf/meshes/link7.STL" />
       </geometry>
     </collision>
   </link>
@@ -63,7 +63,7 @@
     <visual>
       <origin xyz="0 0 0" rpy="0 0 0" />
       <geometry>
-        <mesh filename="package://agilex_piper_urdf/urdf/meshes/link8.STL" />
+        <mesh filename="package://agilex_piper_urdf/meshes/link8.STL" />
       </geometry>
       <material name="">
         <color rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
@@ -72,7 +72,7 @@
     <collision>
       <origin xyz="0 0 0" rpy="0 0 0" />
       <geometry>
-        <mesh filename="package://agilex_piper_urdf/urdf/meshes/link8.STL" />
+        <mesh filename="package://agilex_piper_urdf/meshes/link8.STL" />
       </geometry>
     </collision>
   </link>
