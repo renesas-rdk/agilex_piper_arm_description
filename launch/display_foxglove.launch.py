@@ -23,8 +23,16 @@ This launch file starts:
 - joint_state_publisher: Publishes joint states with configurable initial positions
 - foxglove_bridge: WebSocket bridge for Foxglove Studio visualization
 
+Launch arguments:
+- include_gripper: Include gripper in the robot model (default: false)
+
 Usage:
+  # Display arm only:
   ros2 launch agilex_piper_arm_description display_foxglove.launch.py
+
+  # Display arm with gripper:
+  ros2 launch agilex_piper_arm_description display_foxglove.launch.py include_gripper:=true
+
   Then connect Foxglove Studio to ws://localhost:8765
 """
 
@@ -34,18 +42,28 @@ from typing import List
 import xacro
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
-from launch.actions import IncludeLaunchDescription
+from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, OpaqueFunction
 from launch.launch_description_sources import FrontendLaunchDescriptionSource
+from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
 
 
-def generate_launch_description() -> LaunchDescription:
-    """Generate launch description for Agilex Piper Arm with Foxglove visualization."""
+def launch_setup(context, *args, **kwargs) -> List[Node]:
+    """Setup function to evaluate launch configurations at runtime."""
+    # Get launch configurations
+    include_gripper_value = LaunchConfiguration('include_gripper').perform(context)
+
     package_name = 'agilex_piper_arm_description'
 
     # Paths
     pkg_share = get_package_share_directory(package_name)
-    xacro_file = os.path.join(pkg_share, 'urdf', 'agilex_piper_arm.urdf.xacro')
+
+    # Choose URDF based on gripper configuration
+    if include_gripper_value.lower() == 'true':
+        xacro_file = os.path.join(pkg_share, 'urdf', 'agilex_piper_arm_wi_gripper.urdf.xacro')
+    else:
+        xacro_file = os.path.join(pkg_share, 'urdf', 'agilex_piper_arm.urdf.xacro')
+
     foxglove_bridge_launch = os.path.join(
         get_package_share_directory('foxglove_bridge'),
         'launch',
@@ -56,7 +74,7 @@ def generate_launch_description() -> LaunchDescription:
     robot_description_raw = xacro.process_file(xacro_file).toxml()
 
     # Nodes
-    nodes: List = [
+    nodes: List[Node] = [
         Node(
             package='robot_state_publisher',
             executable='robot_state_publisher',
@@ -79,4 +97,19 @@ def generate_launch_description() -> LaunchDescription:
         )
     ]
 
-    return LaunchDescription(nodes)
+    return nodes
+
+
+def generate_launch_description() -> LaunchDescription:
+    """Generate launch description for Agilex Piper Arm with Foxglove visualization."""
+    # Declare arguments
+    include_gripper_arg = DeclareLaunchArgument(
+        'include_gripper',
+        default_value='false',
+        description='Include gripper in the robot model (true/false)'
+    )
+
+    return LaunchDescription([
+        include_gripper_arg,
+        OpaqueFunction(function=launch_setup)
+    ])

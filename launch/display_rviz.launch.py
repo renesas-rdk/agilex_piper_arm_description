@@ -26,14 +26,26 @@ This launch file starts:
 Launch arguments:
 - rviz_config: Path to RViz configuration file
 - run_rviz: Whether to launch RViz and joint GUI locally (default: false for remote use)
+- include_gripper: Include gripper in the robot model (default: false)
 
 Usage examples:
-1. Run everything locally on the robot:
+1. Run everything locally on the robot (arm only):
    ros2 launch agilex_piper_arm_description display_rviz.launch.py run_rviz:=true
 
-2. Run on robot with RViz on remote PC:
+2. Run everything locally with gripper:
+   ros2 launch agilex_piper_arm_description display_rviz.launch.py run_rviz:=true include_gripper:=true
+
+3. Run on robot with RViz on remote PC (arm only):
    On robot:
    ros2 launch agilex_piper_arm_description display_rviz.launch.py run_rviz:=false
+
+   On remote PC:
+   ros2 run joint_state_publisher_gui joint_state_publisher_gui & rviz2
+   And then load the RViz config file from RViz (rviz/piper_arm_display.rviz).
+
+4. Run on robot with RViz on remote PC (with gripper):
+   On robot:
+   ros2 launch agilex_piper_arm_description display_rviz.launch.py run_rviz:=false include_gripper:=true
 
    On remote PC:
    ros2 run joint_state_publisher_gui joint_state_publisher_gui & rviz2
@@ -46,46 +58,32 @@ from typing import List
 import xacro
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, LogInfo
+from launch.actions import DeclareLaunchArgument, LogInfo, OpaqueFunction
 from launch.conditions import IfCondition, UnlessCondition
 from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
 
 
-def generate_launch_description() -> LaunchDescription:
-    """Generate launch description for Agilex Piper Arm visualization."""
+def launch_setup(context, *args, **kwargs) -> List[Node]:
+    """Setup function to evaluate launch configurations at runtime."""
+    # Get launch configurations
+    include_gripper_value = LaunchConfiguration('include_gripper').perform(context)
+    rviz_config = LaunchConfiguration('rviz_config')
+    run_rviz = LaunchConfiguration('run_rviz')
+
     package_name = 'agilex_piper_arm_description'
 
     # Paths
     pkg_share = get_package_share_directory(package_name)
-    default_rviz_config_path = os.path.join(pkg_share, 'rviz', 'piper_arm_display.rviz')
-    xacro_file = os.path.join(pkg_share, 'urdf', 'agilex_piper_arm.urdf.xacro')
+
+    # Choose URDF based on gripper configuration
+    if include_gripper_value.lower() == 'true':
+        xacro_file = os.path.join(pkg_share, 'urdf', 'agilex_piper_arm_wi_gripper.urdf.xacro')
+    else:
+        xacro_file = os.path.join(pkg_share, 'urdf', 'agilex_piper_arm.urdf.xacro')
 
     # Process the XACRO file
     robot_description_raw = xacro.process_file(xacro_file).toxml()
-
-    # Launch configurations
-    rviz_config = LaunchConfiguration('rviz_config')
-    run_rviz = LaunchConfiguration('run_rviz')
-
-    # Launch arguments
-    launch_args: List[DeclareLaunchArgument] = [
-        DeclareLaunchArgument(
-            name='rviz_config',
-            default_value=default_rviz_config_path,
-            description='Path to RViz config file'
-        ),
-        DeclareLaunchArgument(
-            name='run_rviz',
-            default_value='false',
-            description=(
-                'Launch RViz and joint GUI locally. Default is false for headless robot operation. '
-                'When false, run RViz on remote PC with: ros2 run rviz2 rviz2 '
-                'and joint GUI with: ros2 run joint_state_publisher_gui joint_state_publisher_gui '
-                'And then load the RViz config file from RViz (rviz/piper_arm_display.rviz).'
-            )
-        )
-    ]
 
     # Nodes
     nodes: List[Node] = [
@@ -125,4 +123,39 @@ def generate_launch_description() -> LaunchDescription:
         )
     ]
 
-    return LaunchDescription(launch_args + nodes)
+    return nodes
+
+
+def generate_launch_description() -> LaunchDescription:
+    """Generate launch description for Agilex Piper Arm visualization."""
+    package_name = 'agilex_piper_arm_description'
+
+    # Paths
+    pkg_share = get_package_share_directory(package_name)
+    default_rviz_config_path = os.path.join(pkg_share, 'rviz', 'piper_arm_display.rviz')
+
+    # Launch arguments
+    launch_args: List[DeclareLaunchArgument] = [
+        DeclareLaunchArgument(
+            name='rviz_config',
+            default_value=default_rviz_config_path,
+            description='Path to RViz config file'
+        ),
+        DeclareLaunchArgument(
+            name='run_rviz',
+            default_value='false',
+            description=(
+                'Launch RViz and joint GUI locally. Default is false for headless robot operation. '
+                'When false, run RViz on remote PC with: ros2 run rviz2 rviz2 '
+                'and joint GUI with: ros2 run joint_state_publisher_gui joint_state_publisher_gui '
+                'And then load the RViz config file from RViz (rviz/piper_arm_display.rviz).'
+            )
+        ),
+        DeclareLaunchArgument(
+            name='include_gripper',
+            default_value='false',
+            description='Include gripper in the robot model (true/false)'
+        )
+    ]
+
+    return LaunchDescription(launch_args + [OpaqueFunction(function=launch_setup)])
