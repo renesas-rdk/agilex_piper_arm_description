@@ -8,7 +8,7 @@
     <xacro:property name="gripper_stroke" value="0.035" />
     <xacro:property name="gripper_effort" value="10" />
     <xacro:property name="gripper_velocity" value="1" />
-    <xacro:property name="tcp_offset" value="0.1000" />
+    <xacro:property name="tcp_offset" value="0.1358" />
 
     <!-- Joint to attach the gripper to parent link -->
     <joint name="${prefix}gripper_base_joint" type="fixed">
